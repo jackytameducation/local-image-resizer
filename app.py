@@ -37,18 +37,21 @@ def process_image(image_source, new_width, filename_prefix="image", index=0):
         # Resize the image
         resized_image = image.resize((new_width, new_height), Image.LANCZOS)
         
-        # Create filename with dimensions
+        # Create filename with dimensions - preserve original name better
         name, ext = os.path.splitext(original_filename)
         if not ext:
             ext = '.jpg'
-        resized_filename = f"{secure_filename(name)}_{new_width}x{new_height}{ext}"
+        # Remove only problematic characters, keep most of original name
+        import re
+        safe_name = re.sub(r'[<>:"/\\|?*]', '_', name)
+        resized_filename = f"{safe_name}_{new_width}x{new_height}{ext}"
         
         return resized_image, resized_filename
         
     except Exception as e:
         print(f"Failed to process image: {e}")
         return None, None
-
+        
 @app.route('/resize_batch', methods=['POST'])
 def resize_batch():
     urls_string = request.form.get('image_urls', '')
